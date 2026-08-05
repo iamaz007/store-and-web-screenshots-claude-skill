@@ -1,0 +1,21 @@
+# Fonts are fetched from the google/fonts repo on first use and cached here.
+# They are OFL-licensed binaries — don't vendor them into this repo.
+assets/fonts/
+assets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Working output — captures in, designed tiles out. Never commit a client's
+# app UI by accident.
+designed/
+captures/
+build/
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db

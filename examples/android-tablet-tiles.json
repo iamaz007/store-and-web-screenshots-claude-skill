@@ -1,0 +1,31 @@
+{
+  "theme": {
+    "bg": "#FBFAFE", "bg2": "#E4DCFA", "background": "mesh",
+    "accent": "#5B34D6", "accent2": "#8B5CF6", "accent3": "#F59E0B",
+    "ink": "#12102B", "sub": "#5C5878",
+    "card": "#FFFFFF", "card_ink": "#12102B", "card_sub": "#6C6392",
+    "font_display": "archivo", "font_text": "inter",
+    "props": "flat", "icon_style": "flat", "icon_tint": 72,
+    "spark": "#8B5CF6", "spark_alpha": 60, "ribbon_alpha": 55,
+    "halo": 0, "swirl_alpha": 0,
+    "hero_glow": 26, "hero_shadow": 20, "ground": 26,
+    "shadow_tint": "#2A1A6B", "row_rule": "#8B7BC8", "row_rule_alpha": 70,
+    "prop_shadow": 42, "prop_glow": 40, "device_shadow": 38
+  },
+  "tiles": [
+    {
+      "slug": "tablet-storage",
+      "layout": "showcase",
+      "shot": "home.png",
+      "device_style": "tablet",
+      "device_w": 0.60,
+      "seed": 7,
+      "head": [["Room to Breathe.", false], ["On Every Tablet.", true]],
+      "sub": "The same one-tap cleanup, laid out for a bigger screen.",
+      "head_size": 62,
+      "checks": ["Smart Clean", "Category view", "Recovery"],
+      "left_card": {"title": "90% full, mapped", "sub": "Every category measured"},
+      "right_card": {"title": "One-tap cleanup", "sub": "Nothing you need removed"}
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "theme": {
+    "bg": "#F4F7FF",
+    "bg2": "#DCE7FF",
+    "background": "gradient",
+    "accent": "#396BF5",
+    "accent2": "#6AC6DA",
+    "accent3": "#527DF6",
+    "ink": "#0B1734",
+    "sub": "#5A688A",
+    "card": "#FFFFFF",
+    "card_ink": "#0B1734",
+    "card_sub": "#5A688A",
+    "font_display": "manrope",
+    "font_text": "inter",
+    "props": "flat",
+    "icon_style": "flat",
+    "icon_tint": 70,
+    "spark": "#396BF5",
+    "spark_alpha": 40,
+    "orb_colours": [
+      "#396BF5",
+      "#6AC6DA",
+      "#A8C4F5"
+    ],
+    "halo": 0,
+    "swirl_alpha": 0,
+    "hero_glow": 24,
+    "hero_shadow": 20,
+    "ground": 24,
+    "shadow_tint": "#16255A",
+    "row_rule": "#8FA6D8",
+    "row_rule_alpha": 60,
+    "prop_shadow": 40,
+    "prop_glow": 36,
+    "device_shadow": 38
+  },
+  "tiles": [
+    {
+      "slug": "your-week",
+      "layout": "hero-center",
+      "shot": "week.png",
+      "device_style": "phone",
+      "device_w": 0.62,
+      "seed": 3,
+      "pill": "Day, week, month",
+      "head": [
+        [
+          "Your Whole Week.",
+          false
+        ],
+        [
+          "One Screen.",
+          true
+        ]
+      ],
+      "sub": "Every calendar you use, side by side.",
+      "head_size": 96,
+      "card": {
+        "title": "Nothing double-booked",
+        "sub": "Conflicts surface before you accept"
+      },
+      "side": "right"
+    },
+    {
+      "slug": "ask-scheduled",
+      "layout": "hero-center",
+      "shot": "quick.png",
+      "device_style": "phone",
+      "device_w": 0.62,
+      "seed": 8,
+      "pill": "One tap, four jobs",
+      "head": [
+        [
+          "Ask Once.",
+          false
+        ],
+        [
+          "It's Scheduled.",
+          true
+        ]
+      ],
+      "sub": "Events, reminders and notes without leaving the screen.",
+      "head_size": 96,
+      "card": {
+        "title": "Say it in plain words",
+        "sub": "\u201cWater the plants at 3pm daily\u201d"
+      },
+      "side": "left",
+      "card_y": 0.72
+    }
+  ]
+}

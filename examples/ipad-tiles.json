@@ -1,0 +1,67 @@
+{
+  "theme": {
+    "bg": "#FBFDF4",
+    "bg2": "#DCEDB4",
+    "background": "gradient",
+    "accent": "#5C7F0E",
+    "accent2": "#93C81A",
+    "accent3": "#2D3D07",
+    "ink": "#141A08",
+    "sub": "#5B6650",
+    "card": "#FFFFFF",
+    "card_ink": "#141A08",
+    "card_sub": "#5B6650",
+    "font_display": "source-serif-4",
+    "font_text": "inter",
+    "props": "flat",
+    "icon_style": "flat",
+    "icon_tint": 66,
+    "spark_alpha": 0,
+    "halo": 0,
+    "swirl_alpha": 0,
+    "hero_glow": 22,
+    "hero_shadow": 20,
+    "ground": 24,
+    "shadow_tint": "#1E2A0A",
+    "row_rule": "#93A87A",
+    "row_rule_alpha": 70,
+    "prop_shadow": 40,
+    "prop_glow": 0,
+    "device_shadow": 40
+  },
+  "tiles": [
+    {
+      "slug": "ipad-dashboard",
+      "layout": "showcase",
+      "shot": "dashboard.png",
+      "device_style": "tablet",
+      "device_w": 0.92,
+      "seed": 6,
+      "head": [
+        [
+          "The Whole Year,",
+          false
+        ],
+        [
+          "On One Screen.",
+          true
+        ]
+      ],
+      "sub": "Trends, categories and renewals side by side on iPad.",
+      "head_size": 92,
+      "checks": [
+        "Trends",
+        "Categories",
+        "Renewals"
+      ],
+      "left_card": {
+        "title": "Six-month trend",
+        "sub": "Spot the month it crept up"
+      },
+      "right_card": {
+        "title": "99 subscriptions",
+        "sub": "Monthly and yearly, split"
+      }
+    }
+  ]
+}

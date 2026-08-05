@@ -1,0 +1,334 @@
+{
+  "theme": {
+    "bg": "#FBFAFE",
+    "bg2": "#E4DCFA",
+    "background": "mesh",
+    "accent": "#5B34D6",
+    "accent2": "#8B5CF6",
+    "accent3": "#F59E0B",
+    "ink": "#12102B",
+    "sub": "#5C5878",
+    "card": "#FFFFFF",
+    "card_ink": "#12102B",
+    "card_sub": "#6C6392",
+    "icon_tint": 72,
+    "font_display": "archivo",
+    "font_text": "inter",
+    "props": "3d",
+    "icon_style": "3d",
+    "spark": "#8B5CF6",
+    "spark_alpha": 120,
+    "ribbon_alpha": 55,
+    "halo": 0,
+    "orb_colours": [
+      "#6D4AEC",
+      "#16A34A",
+      "#F97316",
+      "#8B5CF6"
+    ],
+    "hero_glow": 26,
+    "ground": 26,
+    "shadow_tint": "#2A1A6B",
+    "extrude": "#4A28C4",
+    "swirl": "#FFFFFF",
+    "swirl_alpha": 0,
+    "row_rule": "#8B7BC8",
+    "row_rule_alpha": 70,
+    "hero_shadow": 20,
+    "prop_shadow": 42,
+    "prop_glow": 40,
+    "device_shadow": 38
+  },
+  "tiles": [
+    {
+      "slug": "storage-overview",
+      "layout": "hero-mac",
+      "shot": "home.png",
+      "device_w": 0.485,
+      "seed": 7,
+      "pill": "Storage, mapped",
+      "head": [
+        [
+          "All Your Storage.",
+          false
+        ],
+        [
+          "At a Glance.",
+          true
+        ]
+      ],
+      "sub": "See exactly what is filling your disk, measured by category.",
+      "head_size": 82,
+      "features": [
+        {
+          "title": "Every category, measured",
+          "colour": "#16A34A",
+          "icon": "gauge"
+        },
+        {
+          "title": "Smart recommendations",
+          "colour": "#6D4AEC",
+          "icon": "sparkle"
+        }
+      ],
+      "props": [
+        {
+          "x": 0.525,
+          "y": 0.16,
+          "glyph": "folder",
+          "colour": "#6D4AEC",
+          "r": -8,
+          "s": 0.05
+        },
+        {
+          "x": 0.925,
+          "y": 0.15,
+          "glyph": "gauge",
+          "colour": "#16A34A",
+          "r": 7,
+          "s": 0.044
+        },
+        {
+          "x": 0.545,
+          "y": 0.8,
+          "glyph": "disk",
+          "colour": "#F97316",
+          "r": 6,
+          "s": 0.042
+        }
+      ]
+    },
+    {
+      "slug": "every-cleanup",
+      "layout": "hero-mac",
+      "shot": "clean.png",
+      "device_w": 0.485,
+      "seed": 11,
+      "pill": "Junk to duplicates",
+      "head": [
+        [
+          "Every Cleanup.",
+          false
+        ],
+        [
+          "One Place.",
+          true
+        ]
+      ],
+      "sub": "Junk, duplicates, large files, downloads and empty folders, all sized.",
+      "head_size": 82,
+      "features": [
+        {
+          "title": "Deep Clean full-storage scan",
+          "colour": "#16A34A",
+          "icon": "sparkle"
+        },
+        {
+          "title": "Photos and videos included",
+          "colour": "#6D4AEC",
+          "icon": "copies"
+        }
+      ],
+      "props": [
+        {
+          "x": 0.525,
+          "y": 0.18,
+          "glyph": "copies",
+          "colour": "#6D4AEC",
+          "r": 8,
+          "s": 0.05
+        },
+        {
+          "x": 0.925,
+          "y": 0.14,
+          "glyph": "folder",
+          "colour": "#16A34A",
+          "r": -6,
+          "s": 0.044
+        },
+        {
+          "x": 0.545,
+          "y": 0.82,
+          "glyph": "broom",
+          "colour": "#F97316",
+          "r": -7,
+          "s": 0.042
+        }
+      ]
+    },
+    {
+      "slug": "safe-to-clean",
+      "layout": "hero-mac",
+      "shot": "quickclean.png",
+      "device_w": 0.485,
+      "seed": 19,
+      "pill": "You review first",
+      "head": [
+        [
+          "Cleans Only",
+          false
+        ],
+        [
+          "What's Safe.",
+          true
+        ]
+      ],
+      "sub": "Caches, stale temp files and extra copies. Nothing goes until you approve.",
+      "head_size": 82,
+      "features": [
+        {
+          "title": "Backups are never taken",
+          "colour": "#16A34A",
+          "icon": "shield"
+        },
+        {
+          "title": "Protected folders stay put",
+          "colour": "#6D4AEC",
+          "icon": "folder"
+        }
+      ],
+      "props": [
+        {
+          "x": 0.525,
+          "y": 0.17,
+          "glyph": "shield",
+          "colour": "#16A34A",
+          "r": -7,
+          "s": 0.05
+        },
+        {
+          "x": 0.925,
+          "y": 0.15,
+          "glyph": "broom",
+          "colour": "#F97316",
+          "r": 8,
+          "s": 0.044
+        },
+        {
+          "x": 0.545,
+          "y": 0.81,
+          "glyph": "folder",
+          "colour": "#6D4AEC",
+          "r": 6,
+          "s": 0.042
+        }
+      ]
+    },
+    {
+      "slug": "space-back",
+      "layout": "hero-mac",
+      "shot": "complete.png",
+      "device_w": 0.485,
+      "seed": 29,
+      "pill": "One click, done",
+      "head": [
+        [
+          "Cleanup Done.",
+          false
+        ],
+        [
+          "Space Back.",
+          true
+        ]
+      ],
+      "sub": "A clear report of what was removed and exactly how much you reclaimed.",
+      "head_size": 82,
+      "features": [
+        {
+          "title": "See what was cleaned",
+          "colour": "#16A34A",
+          "icon": "gauge"
+        },
+        {
+          "title": "Detailed report every run",
+          "colour": "#6D4AEC",
+          "icon": "disk"
+        }
+      ],
+      "props": [
+        {
+          "x": 0.525,
+          "y": 0.17,
+          "glyph": "sparkle",
+          "colour": "#16A34A",
+          "r": 7,
+          "s": 0.05
+        },
+        {
+          "x": 0.925,
+          "y": 0.15,
+          "glyph": "gauge",
+          "colour": "#6D4AEC",
+          "r": -7,
+          "s": 0.044
+        },
+        {
+          "x": 0.545,
+          "y": 0.81,
+          "glyph": "broom",
+          "colour": "#F97316",
+          "r": 6,
+          "s": 0.042
+        }
+      ]
+    },
+    {
+      "slug": "get-it-back",
+      "layout": "hero-mac",
+      "shot": "recovery.png",
+      "device_w": 0.485,
+      "seed": 23,
+      "pill": "30 days to undo",
+      "head": [
+        [
+          "Deleted It?",
+          false
+        ],
+        [
+          "Get It Back.",
+          true
+        ]
+      ],
+      "sub": "Recovery holds everything you removed for 30 days.",
+      "head_size": 82,
+      "features": [
+        {
+          "title": "Restore in one click",
+          "colour": "#16A34A",
+          "icon": "clock"
+        },
+        {
+          "title": "Files, images and videos",
+          "colour": "#6D4AEC",
+          "icon": "copies"
+        }
+      ],
+      "props": [
+        {
+          "x": 0.525,
+          "y": 0.19,
+          "glyph": "clock",
+          "colour": "#F97316",
+          "r": 7,
+          "s": 0.05
+        },
+        {
+          "x": 0.925,
+          "y": 0.14,
+          "glyph": "shield",
+          "colour": "#16A34A",
+          "r": -8,
+          "s": 0.044
+        },
+        {
+          "x": 0.545,
+          "y": 0.81,
+          "glyph": "copies",
+          "colour": "#6D4AEC",
+          "r": -6,
+          "s": 0.042
+        }
+      ]
+    }
+  ]
+}

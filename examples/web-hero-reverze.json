@@ -1,0 +1,98 @@
+{
+  "theme": {
+    "bg": "#120A24",
+    "bg2": "#2A1055",
+    "background": "gradient",
+    "accent": "#A855F7",
+    "accent2": "#6C4DF1",
+    "accent3": "#C677F8",
+    "ink": "#F6F2FF",
+    "sub": "#A99BC4",
+    "card": "#1B1030",
+    "card_ink": "#F6F2FF",
+    "card_sub": "#A99BC4",
+    "font_display": "space-grotesk",
+    "font_text": "inter",
+    "props": "3d",
+    "icon_style": "3d",
+    "spark": "#C677F8",
+    "spark_alpha": 120,
+    "orb_colours": [
+      "#A855F7",
+      "#6C4DF1",
+      "#C677F8"
+    ],
+    "extrude": "#5B2FB8",
+    "shadow_tint": "#0A0418",
+    "halo": 30,
+    "hero_glow": 70,
+    "hero_shadow": 95,
+    "ground": 70,
+    "swirl": "#C9A6FF",
+    "swirl_alpha": 130,
+    "prop_shadow": 105,
+    "prop_glow": 84,
+    "device_shadow": 105
+  },
+  "tiles": [
+    {
+      "slug": "reverze-hero",
+      "layout": "hero-mac",
+      "shot": "reverze.png",
+      "shot_crop": [
+        0,
+        0,
+        1,
+        0.28
+      ],
+      "url": "reverze.io",
+      "device_w": 0.5,
+      "device_h": 0.72,
+      "seed": 12,
+      "pill": "AI screenshot studio",
+      "head": [
+        [
+          "Store-Ready Shots.",
+          false
+        ],
+        [
+          "In Seconds.",
+          true
+        ]
+      ],
+      "sub": "Turn raw app captures into designed listing assets \u2014 no designer, no waiting.",
+      "head_size": 74,
+      "features": [
+        {
+          "title": "Every store size",
+          "colour": "#A855F7",
+          "icon": "copies"
+        },
+        {
+          "title": "Brand kits, reusable",
+          "colour": "#6C4DF1",
+          "icon": "sparkle"
+        }
+      ],
+      "props": [
+        {
+          "x": 0.55,
+          "y": 0.15,
+          "glyph": "sparkle",
+          "colour": "#A855F7",
+          "r": -8,
+          "s": 0.048
+        },
+        {
+          "x": 0.965,
+          "y": 0.24,
+          "glyph": "copies",
+          "colour": "#6C4DF1",
+          "r": 8,
+          "s": 0.042
+        }
+      ],
+      "device_style": "browser"
+    }
+  ]
+}
