@@ -237,6 +237,19 @@ Two things separate a board that looks designed from one that looks exported:
 - **Never leave it dead straight.** `--tilt -3` rotates the whole board, shadows
   included, as one object. Three to five degrees in-plane; never perspective
   skew, which makes UI unreadable.
+- **Composite big, reduce once.** `--supersample 3` builds the whole board at
+  3x and reduces at the end. Assembling at final size resamples an already
+  downscaled capture a second time — and the tilt rotation resamples it again —
+  which is what makes a board look soft when the sources were sharp. Capture at
+  DPR 3 for the same reason, and at a *narrower* CSS viewport (1280, not 1440)
+  so the UI is physically larger on the finished sheet.
+- **One scale per column, not per board.** A full landing page is 2.5x taller
+  than it is wide; with a single shared scale it caps every column, and the app
+  screens beside it land at ~20% of true size where 14px UI text is under 3px
+  tall and no sharpening can rescue it. `--per-column-scale` lets each column
+  fill the height on its own terms. Before rendering, do the arithmetic:
+  `sheet_width / capture_css_width` is the scale, and under ~25% app UI stops
+  being readable — either cut screens or ship a 2x export alongside.
 - **Keep the shadows off the backdrop.** On a light background `--shadow 80` is
   plenty; anything heavier muddies the gradient and reads as a drop-shadow
   preset. Blur scales with sheet width automatically.
@@ -288,32 +301,16 @@ Full table with current requirements, counts and formats:
 
 ## Device frames
 
-Styles available per tile via `"device_style"`: `phone`, `android`, `tablet`,
-`window`, `macbook`, `browser`. Web tiles default to `browser`; `"device_h"`
-caps the frame's height as a fraction of the tile (0.78 by default for browser
-frames) so a wide window cannot overflow a landscape tile.
+Styles available per tile via `"device_style"`: `phone`, `window`, `macbook`,
+`browser`. Web tiles default to `browser`; `"device_h"` caps the frame's height
+as a fraction of the tile (0.78 by default for browser frames) so a wide window
+cannot overflow a landscape tile.
 
 Draw real device bodies, not outlines — a flat rounded rectangle reads as a
 wireframe and cheapens the set. `build_tiles.py` includes an iPhone body with a
 titanium rail (gradient with specular bands), black bezel, correct corner radius
 and correctly-placed side buttons. For macOS, frame the app in a window with a
 title bar, not in a phone.
-
-**Match the body to the store.** The three slab styles are not interchangeable
-and the differences are visible at tile size:
-
-- `phone` — iPhone. Polished titanium rail, four side buttons (three left, one
-  right), radius 14.8% of the width.
-- `android` — Pixel/Galaxy. Matte anodised rail, power + volume on the **right
-  only**, radius 11.2%. Carrying the polished highlight or the left-hand button
-  cluster onto an Android tile is what makes it look mis-rendered.
-- `tablet` — iPad or Android tablet. Uniform thin rail, no side buttons, radius
-  **3.8%** — a phone's radius fraction on a 13″ slab rounds it into a lozenge.
-
-**Never put an iOS capture in an Android body without cropping the status bar.**
-The Dynamic Island inside a Pixel frame is the first thing a Play reviewer sees.
-`"shot_crop": [0, 0.052, 1, 1]` trims it. Re-purposing captures this way is fine
-for a mockup; for a real listing, capture on the platform you are listing on.
 
 Where the capture already contains device chrome (Dynamic Island, status bar),
 let it come through from the capture rather than drawing over it.

@@ -51,21 +51,26 @@ def trim_blank(im, tol=6, pad=None):
 
 
 def gradient(size, c0, c1, angle=155):
-    """Linear gradient at an arbitrary angle, built once at full tile size."""
+    """Linear gradient at an arbitrary angle.
+
+    Computed on a small grid and scaled up: a linear ramp survives bilinear
+    interpolation exactly, and the per-pixel loop at full tile size is the
+    slowest thing in this script by an order of magnitude.
+    """
     w, h = size
+    sw, sh = max(2, w // 8), max(2, h // 8)
     a = math.radians(angle)
     dx, dy = math.cos(a), math.sin(a)
-    im = Image.new("RGB", size)
+    im = Image.new("RGB", (sw, sh))
     px = im.load()
-    # Project each pixel onto the gradient axis, normalised to 0..1.
-    span = abs(dx) * w + abs(dy) * h
-    ox = 0 if dx >= 0 else w
-    oy = 0 if dy >= 0 else h
-    for y in range(h):
-        for x in range(w):
+    span = abs(dx) * sw + abs(dy) * sh
+    ox = 0 if dx >= 0 else sw
+    oy = 0 if dy >= 0 else sh
+    for y in range(sh):
+        for x in range(sw):
             t = (abs(x - ox) * abs(dx) + abs(y - oy) * abs(dy)) / span
             px[x, y] = tuple(round(a0 + (a1 - a0) * t) for a0, a1 in zip(c0, c1))
-    return im
+    return im.resize((w, h), Image.BILINEAR)
 
 
 def glow(canvas, cx, cy, r, colour, alpha=120):
@@ -227,14 +232,18 @@ def text_panel(canvas, box, th, title, headline, sub, pills):
 
 def build_board(columns, size, out_path, bg, glow_hex, radius, gap, vgap,
                 margin, angle, edge, seed, glow_k, card_aspect, shadow_alpha,
-                balance=True, tilt=0.0, panel=None, bleed=0.0):
+                balance=True, tilt=0.0, panel=None, bleed=0.0, ss=2,
+                per_col=False):
     """Columns of stacked sheets: the long marketing page beside the product.
 
     Column one is normally the whole landing page; the rest are app screens
     cropped to a common card aspect so the stack reads as an even rhythm
     instead of a ragged pile.
     """
-    W, H = size
+    # Everything below works in supersampled space; the final resize brings it
+    # back to the requested size.
+    W, H = size[0] * ss, size[1] * ss
+    gap, margin, radius = gap * ss, margin * ss, radius * ss
     stacks = []
     for col in columns:
         items = []
@@ -252,7 +261,7 @@ def build_board(columns, size, out_path, bg, glow_hex, radius, gap, vgap,
     def col_ratio(items, g):
         return sum(i.height / i.width for i in items) + g * (len(items) - 1)
 
-    if balance:
+    if balance and not per_col:
         # A column holding three screens ends far short of one holding four,
         # and the ragged bottom edge reads as a mistake. Let the short columns
         # show *more* of each screen instead - taller crops, same scale, no
@@ -287,13 +296,23 @@ def build_board(columns, size, out_path, bg, glow_hex, radius, gap, vgap,
     avail_h = H - margin * 2 + int(H * bleed * 2)
     fit_h = max(80.0, (avail_h - math.sin(t) * avail_w) / math.cos(t))
     fit_w = max(80.0, (avail_w - math.sin(t) * avail_h) / math.cos(t))
-    col_w = int(min(fit_w / n,
-                    min(fit_h / col_ratio(s, vgap) for s in stacks)))
-    total_w = col_w * n + gap * (n - 1)
+    if per_col:
+        # Each column fills the height on its own terms. One shared scale lets
+        # the tallest column - usually the whole landing page - shrink every
+        # app screen beside it to an unreadable size; sizing per column keeps
+        # the long page as a shape while the product screens stay legible.
+        widths = [fit_h / col_ratio(s, vgap) for s in stacks]
+        if sum(widths) > fit_w:             # fit_w is the room for all columns
+            k = fit_w / sum(widths)
+            widths = [w * k for w in widths]
+        col_ws = [int(w) for w in widths]
+    else:
+        col_ws = [int(min(fit_w / n,
+                          min(fit_h / col_ratio(s, vgap) for s in stacks)))] * n
+    total_w = sum(col_ws) + gap * (n - 1)
     x0 = board_x + (W - board_x - total_w) // 2
-    vg = int(col_w * vgap)
 
-    canvas = backdrop(size, bg, glow_hex, angle, seed, glow_k)
+    canvas = backdrop((W, H), bg, glow_hex, angle, seed, glow_k)
     if panel:
         pm = int(W * 0.045)
         text_panel(canvas, (pm, 0, board_x - pm * 2, H), panel,
@@ -303,29 +322,39 @@ def build_board(columns, size, out_path, bg, glow_hex, radius, gap, vgap,
     # single object - shadows tilt with the sheets they belong to.
     pad = int(max(W, H) * 0.35)
     layer = Image.new("RGBA", (W + pad * 2, H + pad * 2), (0, 0, 0, 0))
+    x = x0 + pad
     for ci, items in enumerate(stacks):
+        col_w = col_ws[ci]
+        vg = int(col_w * vgap)
         sheets = [sheet(im, col_w, radius, edge, shadow_alpha) for im in items]
         col_h = sum(s.height for s in sheets) + vg * (len(sheets) - 1)
-        x = x0 + ci * (col_w + gap) + pad
         y = (H - col_h) // 2 + pad
         for s in sheets:
             drop(layer, s, x, y, blur=int(col_w * 0.16), spread=4,
                  alpha=shadow_alpha, dy=int(col_w * 0.05))
             layer.alpha_composite(s, (x, y))
             y += s.height + vg
+        x += col_w + gap
 
     if tilt:
         layer = layer.rotate(tilt, resample=Image.BICUBIC, center=(
             layer.width / 2, layer.height / 2))
     canvas.alpha_composite(layer.crop((pad, pad, pad + W, pad + H)))
 
-    canvas.convert("RGB").save(out_path)
-    print("wrote", out_path, (W, H), f"{n} columns, sheet width {col_w}")
+    out = canvas.convert("RGB")
+    if ss > 1:
+        # Supersample down. Compositing and rotating at final size resamples a
+        # 2880px capture twice at low resolution and the UI goes soft; doing the
+        # whole board large and reducing once keeps the edges.
+        out = out.resize((W // ss, H // ss), Image.LANCZOS)
+        out = out.filter(ImageFilter.UnsharpMask(radius=0.7, percent=55,
+                                                 threshold=2))
+    out.save(out_path)
+    print("wrote", out_path, out.size, f"{n} columns, sheet width {col_w // ss}")
 
 
 def build(shot_path, size, out_path, bg, glow_hex, cols, radius, gap,
-          stagger, margin, angle, edge, seed, glow_k=1.0, shadow_alpha=150,
-          tilt=0.0):
+          stagger, margin, angle, edge, seed, glow_k=1.0, shadow_alpha=150):
     W, H = size
     shot = trim_blank(Image.open(shot_path).convert("RGB"))
     canvas = backdrop(size, bg, glow_hex, angle, seed, glow_k)
@@ -340,24 +369,11 @@ def build(shot_path, size, out_path, bg, glow_hex, cols, radius, gap,
     # Fit by height first: the tallest column decides the scale, and the same
     # factor applies to both axes.
     tallest = max(p.height / p.width for p in pieces)
-    # A tilted set needs its own bounding box: rotating by t costs sin(t) *
-    # width of vertical room and sin(t) * height of horizontal room. Same
-    # arithmetic as `build_board` - solve for the box that still fits after
-    # the rotation rather than rotating and hoping.
-    t = math.radians(abs(tilt))
-    avail_w = W - margin * 2 - gap * (cols - 1)
     avail_h = H - margin * 2 - abs(stagger)
-    fit_h = max(80.0, (avail_h - math.sin(t) * avail_w) / math.cos(t))
-    fit_w = max(80.0, (avail_w - math.sin(t) * avail_h) / math.cos(t))
-    col_w = min(int(fit_h / tallest), int(fit_w / cols))
+    col_w = min(int(avail_h / tallest), int((W - margin * 2 - gap * (cols - 1)) / cols))
     total_w = col_w * cols + gap * (cols - 1)
     x0 = (W - total_w) // 2
 
-    # Columns and their shadows share one layer so the whole set rotates as a
-    # single object - shadows tilt with the sheet they belong to, instead of
-    # staying square underneath a rotated page.
-    pad = int(max(W, H) * 0.35)
-    layer = Image.new("RGBA", (W + pad * 2, H + pad * 2), (0, 0, 0, 0))
     for i, p in enumerate(pieces):
         cw = col_w
         ch = round(cw * p.height / p.width)          # derived, never assumed
@@ -367,15 +383,10 @@ def build(shot_path, size, out_path, bg, glow_hex, cols, radius, gap,
             d = ImageDraw.Draw(p)
             d.rounded_rectangle([0, 0, cw - 1, ch - 1], radius,
                                 outline=hexc(edge) + (70,), width=2)
-        x = x0 + i * (cw + gap) + pad
-        y = (H - ch) // 2 + (stagger if i % 2 else -stagger) + pad
-        drop(layer, p, x, y, blur=34, spread=8, alpha=shadow_alpha, dy=18)
-        layer.alpha_composite(p, (x, y))
-
-    if tilt:
-        layer = layer.rotate(tilt, resample=Image.BICUBIC,
-                             center=(layer.width / 2, layer.height / 2))
-    canvas.alpha_composite(layer.crop((pad, pad, pad + W, pad + H)))
+        x = x0 + i * (cw + gap)
+        y = (H - ch) // 2 + (stagger if i % 2 else -stagger)
+        drop(canvas, p, x, y, blur=34, spread=8, alpha=150, dy=18)
+        canvas.alpha_composite(p, (x, y))
 
     canvas.convert("RGB").save(out_path)
     print("wrote", out_path, (W, H))
@@ -399,6 +410,11 @@ def main():
     ap.add_argument("--pills", default="", help="comma-separated chips")
     ap.add_argument("--text-col", type=float, default=0.0,
                     help="fraction of the tile given to the copy panel")
+    ap.add_argument("--per-column-scale", action="store_true",
+                    help="size each column to fill the height on its own, so a "
+                         "tall landing page does not shrink the app screens")
+    ap.add_argument("--supersample", type=int, default=2,
+                    help="render at NxN and reduce once; 1 disables")
     ap.add_argument("--bleed", type=float, default=0.0,
                     help="let the board run off the edges by this fraction")
     ap.add_argument("--ink", default="#14150F")
@@ -443,16 +459,12 @@ def main():
                     a.gap, a.vgap, a.margin, a.angle, a.edge, a.seed,
                     a.glow_strength, a.card_aspect, a.shadow,
                     balance=not a.no_balance, tilt=a.tilt,
-                    panel=panel, bleed=a.bleed)
+                    panel=panel, bleed=a.bleed, ss=max(1, a.supersample),
+                    per_col=a.per_column_scale)
     else:
-        # Board-only flags are a silent no-op on the --shot path, which costs a
-        # round of "why did nothing change?". Say so instead of ignoring them.
-        for flag, val in (("--text-col", a.text_col), ("--bleed", a.bleed)):
-            if val:
-                ap.error(f"{flag} applies to --board only")
         build(a.shot, (w, h), a.out, a.bg.split(","), a.glow, a.cols, a.radius,
               a.gap, a.stagger, a.margin, a.angle, a.edge, a.seed,
-              glow_k=a.glow_strength, shadow_alpha=a.shadow, tilt=a.tilt)
+              glow_k=a.glow_strength, shadow_alpha=a.shadow)
 
 
 if __name__ == "__main__":
