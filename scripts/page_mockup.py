@@ -171,61 +171,77 @@ def _face(name, size, weight_role="heavy"):
 def text_panel(canvas, box, th, title, headline, sub, pills):
     """Brand block beside the screens: mark, headline, one line, small pills.
 
-    The marketplace-tile convention - copy on one side, product on the other.
-    Keep it short; this panel competes with the screens for the first read.
+    Fits itself to the box in both axes - lines wrap to the width, and the whole
+    block shrinks until it clears the height. A copy block that overruns its box
+    lands on whatever sheet sits below it, which is the single most obvious sign
+    that a board was generated rather than set.
     """
     x, y0, w, h = box
     ink, accent, muted = hexc(th["ink"]), hexc(th["accent"]), hexc(th["muted"])
-    # Draw on an overlay: ImageDraw with a sub-255 alpha *replaces* the canvas
-    # alpha instead of blending, so a "70% outline" drawn straight onto the
-    # backdrop comes out fully opaque once the tile is flattened to RGB.
     over = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     d = ImageDraw.Draw(over)
-    lines = []                                   # (font, text, fill, gap after)
 
-    if title:
-        f = _face(th["display"], int(w * 0.075), "heavy")
-        lines.append((f, title.upper(), ink, int(w * 0.10)))
-    if headline:
-        f = _face(th["display"], int(w * 0.155), "heavy")
-        for i, part in enumerate(headline.split("|")):
-            lines.append((f, part.strip(), ink if i == 0 else accent,
-                          int(w * 0.02)))
-        lines[-1] = lines[-1][:3] + (int(w * 0.07),)
-    if sub:
-        f = _face(th["text"], int(w * 0.068), "regular")
-        # Wrap by measured width - never letter-space or squeeze to fit.
-        words, line = sub.split(), ""
-        for word in words:
-            trial = f"{line} {word}".strip()
-            if d.textlength(trial, font=f) > w and line:
-                lines.append((f, line, muted, int(w * 0.018)))
-                line = word
-            else:
-                line = trial
-        lines.append((f, line, muted, int(w * 0.09)))
+    def advance(f):
+        asc, desc = f.getmetrics()
+        return asc + desc
 
-    total = sum(f.getbbox(t)[3] - f.getbbox(t)[1] + g for f, t, _, g in lines)
-    pill_f = _face(th["text"], int(w * 0.056), "medium") if pills else None
-    pill_h = int(w * 0.13)
-    if pills:
-        total += pill_h
+    def layout(k):
+        """Build the line list at scale k; return (lines, total height)."""
+        lines = []
+        if title:
+            f = _face(th["display"], max(8, int(w * 0.075 * k)), "heavy")
+            lines.append((f, title.upper(), ink, int(w * 0.055 * k)))
+        if headline:
+            size = int(w * 0.155 * k)
+            parts = [p.strip() for p in headline.split("|")]
+            while size > int(w * 0.05 * k):
+                f = _face(th["display"], max(8, size), "heavy")
+                if max(d.textlength(p, font=f) for p in parts) <= w:
+                    break
+                size = int(size * 0.92)
+            f = _face(th["display"], max(8, size), "heavy")
+            for i, part in enumerate(parts):
+                lines.append((f, part, ink if i == 0 else accent,
+                              int(size * 0.06)))
+            lines[-1] = lines[-1][:3] + (int(size * 0.5),)
+        if sub:
+            f = _face(th["text"], max(8, int(w * 0.068 * k)), "regular")
+            line = ""
+            for word in sub.split():
+                trial = f"{line} {word}".strip()
+                if d.textlength(trial, font=f) > w and line:
+                    lines.append((f, line, muted, int(w * 0.012 * k)))
+                    line = word
+                else:
+                    line = trial
+            lines.append((f, line, muted, int(w * 0.09 * k)))
+        total = sum(advance(f) + g for f, _, _, g in lines)
+        return lines, total
 
-    y = y0 + (h - total) // 2
+    k = 1.0
+    lines, total = layout(k)
+    while total > h and k > 0.45:
+        k *= 0.93
+        lines, total = layout(k)
+
+    y = y0
     for f, t, fill, g in lines:
         d.text((x, y), t, font=f, fill=fill)
-        y += f.getbbox(t)[3] - f.getbbox(t)[1] + g
+        y += advance(f) + g
 
-    px = x
-    for p in pills:
-        pw = int(d.textlength(p, font=pill_f) + w * 0.095)
-        if px + pw > x + w:                       # wrap rather than overflow
-            px, y = x, y + pill_h + int(w * 0.025)
-        d.rounded_rectangle([px, y, px + pw, y + pill_h], pill_h // 2,
-                            outline=ink + (105,), width=2)
-        d.text((px + pw // 2, y + pill_h // 2), p, font=pill_f, fill=ink,
-               anchor="mm")
-        px += pw + int(w * 0.028)
+    if pills:
+        pill_f = _face(th["text"], max(8, int(w * 0.056 * k)), "medium")
+        pill_h = int(w * 0.13 * k)
+        px = x
+        for p in pills:
+            pw = int(d.textlength(p, font=pill_f) + w * 0.095 * k)
+            if px + pw > x + w:
+                px, y = x, y + pill_h + int(w * 0.025)
+            d.rounded_rectangle([px, y, px + pw, y + pill_h], pill_h // 2,
+                                outline=ink + (105,), width=2)
+            d.text((px + pw // 2, y + pill_h // 2), p, font=pill_f, fill=ink,
+                   anchor="mm")
+            px += pw + int(w * 0.028)
 
     canvas.alpha_composite(over)
 
