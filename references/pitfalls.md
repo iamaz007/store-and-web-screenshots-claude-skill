@@ -166,39 +166,7 @@ cost a round of rework if you get them wrong:
 This is the one place perspective is allowed. Pitfall #5 still stands for any
 tile showing app UI.
 
-## 16. The accent underline drawn through the line below it
-
-**Symptom:** the hand-drawn stroke under the accent word runs straight across
-the sub-line, as if someone had crossed the sentence out.
-
-**Cause:** `underline` draws a stroke of **fixed pixel height** regardless of the
-type size, but the line advance is a fraction of the type size. At any headline
-below ~470px the stroke is taller than the gap, so it lands on whatever comes
-next.
-
-**Fix:** `headline()` now clears `UNDERLINE_CLEARANCE` past the stroke before
-returning. The general lesson: any drawing helper whose geometry does not scale
-with its type size will collide with something eventually — advance past the
-**drawn extent**, not past a multiple of the font size.
-
-## 17. The wrong slab body for the store
-
-**Symptom:** an Android tile that reads as "an iPhone with the wrong icons", or
-an iPad tile whose corners are so round the body looks like a lozenge.
-
-**Cause:** one phone body reused for every slot. A polished titanium rail and a
-three-button left-hand cluster are iPhone tells; a 14.8%-of-width corner radius
-is right for a phone and grotesque on a 13" tablet.
-
-**Fix:** `"device_style"` — `phone`, `android` (matte rail, right-side buttons,
-tighter radius) or `tablet` (thin uniform rail, no buttons, 3.8% radius).
-
-**And crop the status bar when re-purposing captures across platforms.** An iOS
-Dynamic Island inside a Pixel body is the first thing a Play reviewer notices.
-`"shot_crop": [0, 0.052, 1, 1]` removes it. For a listing that ships, capture on
-the platform you are listing on.
-
-## 18. Chasing a render Pillow cannot produce
+## 16. Chasing a render Pillow cannot produce
 
 **Symptom:** round after round polishing a fake-3D hero object that still reads
 as cardboard next to the reference.

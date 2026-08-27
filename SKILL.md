@@ -155,7 +155,58 @@ Whichever archetype is chosen, these hold:
 - Type is never stretched, condensed or letter-spaced to fit. Text in a column
   shares one left margin.
 
-### 6. Verify before delivering
+### 6. Lift the feature out of the device
+
+**A tile that pastes a whole screen into a phone and stops is the single most
+common way this skill gets used badly.** Look at any listing in a competitive
+category: the collage, the cutout, the before/after is *pulled out* of the
+phone, blown up two or three times, matted in white and floated over the device
+so it breaks the phone's outline. At browse size that is the difference between
+a tile someone can read and a tile they scroll past — inside the frame, the
+feature is a 200px-wide postage stamp.
+
+Two shapes, both per-tile config:
+
+```jsonc
+"lift":    {"crop": [l,t,r,b], "w": 0.80, "y": 0.62, "rot": -2}
+"lift_ba": {"before": {"shot": "a.png", "crop": [...]},
+            "after":  {"shot": "b.png", "crop": [...]},
+            "w": 0.94, "y": 0.62, "labels": ["Before","After"], "chevron": true}
+```
+
+`crop` is fractional on the source capture, `w` is the slab's width as a
+fraction of the tile, `y` its centre. `lift_ba` builds the two-panel Before |
+After card with pills and an accent chevron. Both draw **after** the device, so
+they overlap it on purpose.
+
+**Measure the crop, never estimate it.** Eyeballing a region off a screenshot is
+wrong by one or two percent every time, which is enough to lift a slab of empty
+white along with the feature, or to clip it. App UI is mostly flat colour
+fields, so find the real bounds from the pixels:
+
+```python
+a = np.asarray(Image.open(shot).convert("RGB")).astype(int)
+ys, xs = np.nonzero((a[...,1] > 200) & (a[...,2] < 120))   # e.g. a lime card
+rect = (xs.min()/W, ys.min()/H, xs.max()/W, ys.max()/H)
+```
+
+**For a before/after, capture both states from the same screen** so the two
+crops line up — toggle the app's own compare control, or drag its own
+before/after divider to each end. Two panels shot from different screens will
+frame the subject differently and the comparison stops being one.
+
+**Do not lift on every tile.** Lift where the *artifact* is the message — a
+finished document, a cutout, a before/after. Leave the screen plain where the
+*spread* is the message: a catalogue tile saying "200 templates" is advertising
+breadth, and a blown-up single card sits on top of the very grid it is selling.
+The same goes for a library or history screen. A set where every tile carries a
+slab reads as a formula.
+
+A **focus ring** drawn inside the screen is the weaker cousin of this: it points
+at a feature the viewer still cannot see. Use it only where the thing genuinely
+cannot be lifted — a selection in a list, a control being tapped.
+
+### 7. Verify before delivering
 
 Check every tile against `references/checklist.md`. At minimum: exact pixel size
 for the target slot, no alpha channel, app UI matches the source capture
@@ -220,6 +271,40 @@ bloom in the margins. Arbitrary output size, so it also covers off-spec asks
     python3 scripts/page_mockup.py --shot page.png --out docs/site.png \
         --size 1280x769 --bg "#222617,#080907" --glow "#C6F94F" --cols 2 \
         --gap 52 --stagger 16 --angle 135
+
+**Portfolio boards and case-study cards** — the sliced-column look is one
+composition, and using it for everything is why sets start looking related. When
+the deliverable is a portfolio card, a case-study hero, an OG image or a "we
+built this" post, use `scripts/collage.py`: eleven layout archetypes, five
+background fields, optional containment card, whole-board tilt, lifted UI chips,
+stat cards, accent pills and icon badges.
+
+    python3 scripts/collage.py --list-layouts
+    python3 scripts/collage.py --layout cascade --out board.png --size 1280x769 \
+        --pieces "home.png@2.0;pricing.png@1.1;about.png@1.2" \
+        --chips "home.png#0.05,0.62,0.55,0.80" \
+        --stats "700+|websites built" --badges 2 \
+        --field shapes --bg "#5B6BF0,#4553CC" --tilt -3
+
+**For a portfolio board, start with whole pages.** Two to four complete,
+uncropped page captures side by side, tilted together in perspective on a soft
+field (`--layout pages3 --perspective "22,16"`). Nothing is cropped, so nothing
+can be cropped badly - and it beats an elaborate generated collage. Device
+mockups (`device-hero`) come second; fragment collages last.
+
+Three rules decide whether a fragment collage reads at all: **lead with the whole hero**,
+**compose from whole sections** (`page.png~2`, listed with `--list-sections`)
+rather than guessed percentage bands, and **caption it in plain language** for
+someone outside the industry. Never number the boards on the image itself.
+
+**Read `references/composition-gallery.md` before building one** — it lists the
+archetypes with what each is for, the piece/crop syntax, and the rules that hold
+across all of them (bleed on purpose, vary the scale, in-plane rotation only).
+
+**Rotate the archetype every project.** Note the previous project's `--layout`,
+`--field` and accent, and pick different ones. Two boards from this skill that
+share structure, field and palette mean it was used wrong — the variety is the
+deliverable, not a bonus.
 
 **Marketing page beside the product** — for a site with a signed-in app, one
 landing page is a thin story. Use `--board` instead: column one is the whole
@@ -322,5 +407,7 @@ let it come through from the capture rather than drawing over it.
 - `references/research.md` — how to research competitor listings first
 - `references/pitfalls.md` — failures this skill exists to prevent
 - `references/checklist.md` — pre-delivery verification
+- `references/composition-gallery.md` — board archetypes, fields, the variety rule
 - `scripts/build_tiles.py` — the compositor
 - `scripts/page_mockup.py` — whole-page website mockup (sliced columns on a backdrop)
+- `scripts/collage.py` — portfolio-style boards (11 archetypes, fields, chips, stats)
