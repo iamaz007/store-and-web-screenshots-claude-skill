@@ -135,6 +135,30 @@ Rule of thumb: on light, roughly a third of the dark-background value, and drop
 the two atmospheric layers (halo, swirls) entirely. The object's own form and
 its side wall carry the depth — the shadow only needs to seat it.
 
+## Step 7 — lift the feature out of the device
+
+The archetypes above all put a device on a tile. What separates the listings
+that convert from the ones that do not is what happens *next*: the feature is
+lifted out of the phone, enlarged and floated over it.
+
+| Config | Shape | Use for |
+|---|---|---|
+| `lift` | one region, matted and enlarged | the artifact the app makes — a collage, a finished page, a card being chosen |
+| `lift_ba` | two panels, pills, accent chevron | anything with a before and an after — cutouts, object removal, enhancement |
+
+Rules that hold for both:
+
+- **Measure the crop off the pixels.** A flat colour field locates itself; an
+  estimate is out by a percent or two and lifts empty chrome with the feature.
+- **Both halves of a before/after come from the same screen**, via the app's own
+  compare toggle or divider, or the two panels frame the subject differently.
+- **Let it break the device outline.** A slab that fits neatly inside the phone
+  has gained nothing over the screenshot it came from.
+- **One lift per tile.** Two slabs fight, and the eye lands on neither.
+- **Not every tile.** Lift where the artifact is the message; leave the screen
+  plain where the spread is — a "200 templates" tile or a library screen is
+  selling breadth, and a blown-up single item covers the thing being sold.
+
 ## Judgement
 
 - **Contrast against the store.** Both stores are white; a set that is entirely

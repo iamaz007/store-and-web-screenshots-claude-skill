@@ -33,6 +33,7 @@ HEAVY, DEMI, MEDIUM, REGULAR = "heavy", "demi", "medium", "regular"
 from fonts import ALL as TYPEFACES, advise, ensure, resolve   # noqa: E402
 
 _ACTIVE = {"display": "outfit", "text": "inter"}
+_SHOTS_DIR = ["."]        # set by build(); feature_lift() reads sibling captures
 
 # Exact store slots - see references/platform-specs.md
 PRESETS = {
@@ -451,28 +452,6 @@ def _rail(w, h, radius):
     return grad
 
 
-def _rail_matte(w, h, radius):
-    """Android flagship frame: anodised aluminium, not polished titanium.
-
-    Same shape as `_rail`, but the specular bands are flattened into a single
-    soft vertical falloff. Polished highlights are an iPhone tell - carrying
-    them onto an Android body is what makes a Pixel look like a mis-rendered
-    iPhone.
-    """
-    grad = Image.new("RGB", (1, h))
-    px = grad.load()
-    for y in range(h):
-        t = y / max(1, h - 1)
-        v = int(max(52, min(150, 96 + 34 * math.exp(-((t - .30) ** 2) / .09)
-                            - 26 * t)))
-        px[0, y] = (v, v, v + 2)
-    grad = grad.resize((w, h), Image.BILINEAR).convert("RGBA")
-    m = Image.new("L", (w, h), 0)
-    ImageDraw.Draw(m).rounded_rectangle([0, 0, w - 1, h - 1], radius, fill=255)
-    grad.putalpha(m)
-    return grad
-
-
 def _window(shot, target_w, bar=52, radius=22, dark=False):
     sw = target_w
     sh = round(sw * shot.height / shot.width)
@@ -604,20 +583,6 @@ def device(path, target_w, style="phone", rail=11, bezel=13, radius_pct=.148,
     if style == "window":
         return _window(shot, target_w, dark=dark)
 
-    # Android bodies differ from iPhone in three ways that are all visible at
-    # tile size: a thinner uniform rail, a tighter corner radius, and power +
-    # volume on the RIGHT only (no left-hand cluster, no action button).
-    android = style == "android"
-    if android:
-        rail, bezel, radius_pct = 8, 11, .112
-    if style == "tablet":
-        # iPad / Android tablet: uniform thin rail, and a corner radius that is
-        # a much smaller FRACTION of the width than a phone's, because the body
-        # is far wider. Reusing the phone's .148 on a 13" slab rounds the
-        # corners into a lozenge. No side buttons - at tile size they read as
-        # dirt on a body this wide.
-        rail, bezel, radius_pct, buttons = 9, 12, .038, False
-
     sw = target_w - (rail + bezel) * 2
     sh = round(sw * shot.height / shot.width)          # derived, never assumed
     shot = shot.resize((sw, sh), Image.LANCZOS)
@@ -629,14 +594,12 @@ def device(path, target_w, style="phone", rail=11, bezel=13, radius_pct=.148,
     ox = btn
     if buttons:
         d = ImageDraw.Draw(body)
-        sides = [(.20, .27, "r"), (.30, .42, "r")] if android else \
-                [(.20, .27, "l"), (.31, .40, "l"), (.42, .51, "l"), (.33, .45, "r")]
-        fill = (108, 108, 110, 255) if android else (150, 148, 146, 255)
-        for y0, y1, side in sides:
+        for y0, y1, side in [(.20, .27, "l"), (.31, .40, "l"), (.42, .51, "l"),
+                             (.33, .45, "r")]:
             x0 = 0 if side == "l" else ox + bw - 2
             d.rounded_rectangle([x0, int(bh * y0), x0 + btn + 2, int(bh * y1)],
-                                btn // 2, fill=fill)
-    body.alpha_composite((_rail_matte if android else _rail)(bw, bh, radius), (ox, 0))
+                                btn // 2, fill=(150, 148, 146, 255))
+    body.alpha_composite(_rail(bw, bh, radius), (ox, 0))
     inner = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
     ImageDraw.Draw(inner).rounded_rectangle(
         [rail, rail, bw - rail - 1, bh - rail - 1], radius - rail, fill=(9, 9, 11, 255))
@@ -667,10 +630,128 @@ def place(canvas, layer, x, y, rotate=0.0, with_shadow=True, alpha=105):
     canvas.alpha_composite(layer, (x, y))
 
 
-# Vertical space the hand-drawn accent stroke actually occupies below the
-# baseline box, measured off `underline` below (centre 30 + rise 7 + radius 8),
-# plus breathing room. Anything drawn after an underlined line must clear this.
-UNDERLINE_CLEARANCE = 52
+# ---------------------------------------------------------------- feature lift
+
+def _crop_frac(im, crop):
+    if not crop:
+        return im
+    l, t, r, b = crop
+    return im.crop((int(im.width * l), int(im.height * t),
+                    int(im.width * r), int(im.height * b)))
+
+
+def _matted(img, mat, radius, mat_colour=(255, 255, 255)):
+    """A slab in a white mat with rounded corners."""
+    w, h = img.width + mat * 2, img.height + mat * 2
+    lay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ImageDraw.Draw(lay).rounded_rectangle([0, 0, w - 1, h - 1], radius=radius,
+                                          fill=mat_colour + (255,))
+    m = Image.new("L", img.size, 0)
+    ImageDraw.Draw(m).rounded_rectangle([0, 0, img.width - 1, img.height - 1],
+                                        radius=max(0, radius - mat), fill=255)
+    lay.paste(img, (mat, mat), m)
+    return lay
+
+
+def _pill(d, x, y, text, th, size, fg=(255, 255, 255), bg=(24, 24, 28)):
+    f = font(size, DEMI)
+    tw = d.textlength(text, font=f)
+    padx, pady = int(size * 0.62), int(size * 0.42)
+    d.rounded_rectangle([x, y, x + tw + padx * 2, y + size + pady * 2],
+                        radius=int((size + pady * 2) / 2), fill=bg + (235,))
+    d.text((x + padx, y + pady - size * 0.12), text, font=f, fill=fg)
+    return tw + padx * 2
+
+
+def _chevron(canvas, cx, cy, r, colour):
+    """The accent chevron that sits between a before and an after."""
+    lay = Image.new("RGBA", (r * 2, r * 2), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lay)
+    d.ellipse([0, 0, r * 2 - 1, r * 2 - 1], fill=(255, 255, 255, 255))
+    w = max(3, int(r * 0.15))
+    for k in (-0.30, 0.14):
+        d.line([(r + k * r - r * 0.22, r - r * 0.34), (r + k * r + r * 0.22, r),
+                (r + k * r - r * 0.22, r + r * 0.34)],
+               fill=colour + (255,), width=w, joint="curve")
+    shadow(canvas, lay, cx - r, cy - r, blur=int(r * 0.9), spread=int(r * 0.18), alpha=90)
+    canvas.alpha_composite(lay, (cx - r, cy - r))
+
+
+def feature_lift(canvas, spec, th, W, H, scale, shots_dir):
+    """Lift the part of the app the headline is about OUT of the device, enlarged.
+
+    A ring drawn inside the screen points at a feature; this shows it. The
+    listings that convert in this category almost all do the second thing —
+    the collage, the cutout, the before/after is pulled out of the phone, blown
+    up two or three times, matted in white and floated over the device so it
+    breaks the phone's outline. At browse size that is the difference between a
+    tile you can read and a tile you cannot.
+
+    Two shapes:
+
+      "lift"     one region, enlarged
+      "lift_ba"  two regions side by side as Before | After, with pills and an
+                 accent chevron between them
+
+    Both take `w` (width as a fraction of the tile), `y` (centre, fraction of
+    tile height) and an optional `rot`.
+    """
+    ba = spec.get("lift_ba")
+    one = spec.get("lift")
+    if not (ba or one):
+        return
+
+    accent = hexc(th["accent"])
+    mat = max(6, int(W * 0.014))
+    rad = int(W * 0.030)
+
+    if one:
+        src = Image.open(os.path.join(shots_dir, one.get("shot", spec["shot"]))
+                         if one.get("shot") else spec["shot"]).convert("RGB")
+        img = _crop_frac(src, one.get("crop"))
+        tw = int(W * one.get("w", 0.80))
+        img = img.resize((tw, max(1, round(img.height * tw / img.width))), Image.LANCZOS)
+        slab = _matted(img, mat, rad)
+    else:
+        panels = []
+        for side in ("before", "after"):
+            cfg = ba[side]
+            src = Image.open(os.path.join(shots_dir, cfg["shot"])).convert("RGB")
+            panels.append(_crop_frac(src, cfg.get("crop")))
+        total = int(W * ba.get("w", 0.92))
+        gap = int(total * 0.045)
+        pw = (total - gap - mat * 4) // 2
+        ph = max(1, round(panels[0].height * pw / panels[0].width))
+        panels = [p.resize((pw, ph), Image.LANCZOS) for p in panels]
+
+        slab = Image.new("RGBA", (total, ph + mat * 2), (0, 0, 0, 0))
+        for i, p in enumerate(panels):
+            x = i * (pw + mat * 2 + gap)
+            slab.alpha_composite(_matted(p, mat, rad), (x, 0))
+        d = ImageDraw.Draw(slab)
+        labels = ba.get("labels", ["Before", "After"])
+        ls = int(W * 0.030)
+        for i, text in enumerate(labels[:2]):
+            x = i * (pw + mat * 2 + gap) + mat + int(ls * 0.5)
+            _pill(d, x, mat + int(ls * 0.5), text, th, ls)
+
+    if one:
+        slab_out = slab
+    else:
+        slab_out = slab
+
+    rot = spec.get("lift_rot", (one or ba).get("rot", 0))
+    if rot:
+        slab_out = slab_out.rotate(rot, resample=Image.BICUBIC, expand=True)
+
+    cy = int(H * (one or ba).get("y", 0.55))
+    x = (W - slab_out.width) // 2
+    y = cy - slab_out.height // 2
+    shadow(canvas, slab_out, x, y, blur=int(W * 0.030), spread=int(W * 0.012), alpha=120)
+    canvas.alpha_composite(slab_out, (x, y))
+
+    if ba and ba.get("chevron", True):
+        _chevron(canvas, W // 2, cy, int(W * 0.052), accent)
 
 
 def underline(canvas, x, y, width, colour):
@@ -802,15 +883,10 @@ def headline(canvas, lines, top, margin, size, th, mark=True):
         colour = th["accent"] if accent else th["ink"]
         d.text((margin, y), text, font=f, fill=hexc(colour) + (255,))
         box = d.textbbox((margin, y), text, font=f)
-        y = box[3] + int(size * .16)
         if accent and mark:
-            top = box[3] + int(size * .05)
-            underline(canvas, margin, top, box[2] - box[0], th["accent"])
-            # `underline` draws a fixed-height hand-drawn stroke, so its extent
-            # does NOT shrink with the type size. Line advance alone therefore
-            # runs the stroke through whatever comes next - a sub-line at 60px
-            # gets a pen stroke straight across it. Clear the stroke explicitly.
-            y = max(y, top + UNDERLINE_CLEARANCE)
+            underline(canvas, margin, box[3] + int(size * .05), box[2] - box[0],
+                      th["accent"])
+        y = box[3] + int(size * .16)
     return y
 
 
@@ -927,8 +1003,7 @@ def render(canvas, spec, th, W, H, landscape, style, i):
     if spec.get("shot"):
         dw = int(W * spec.get("device_w", 0.44 if layout == "feature-left" else 0.68))
         dstyle = spec.get("device_style", "macbook" if layout == "hero-mac" else style)
-        dev = device(spec["shot"], dw, style=dstyle,
-                     buttons=(dstyle in ("phone", "android")),
+        dev = device(spec["shot"], dw, style=dstyle, buttons=(dstyle == "phone"),
                      dark=spec.get("dark_window", False),
                      crop=spec.get("shot_crop"), url=spec.get("url"))
         # Layouts size the frame by width, which is right for a portrait phone
@@ -1159,6 +1234,9 @@ def render(canvas, spec, th, W, H, landscape, style, i):
                 card(canvas, W - margin + int(26 * scale), cy, spec["card"]["title"],
                      spec["card"]["sub"], th, int(62 * scale), int(34 * scale),
                      int(44 * scale), anchor="right")
+    # Drawn last so it sits over the device and breaks its outline.
+    feature_lift(canvas, spec, th, W, H, scale, _SHOTS_DIR[0])
+
     if spec.get("cta"):
         cta_bar(canvas, spec["cta"], margin, H - int(220 * scale), W - margin * 2, th, scale)
 
@@ -1185,6 +1263,7 @@ def build(platform, tiles, shots_dir, out_dir, theme, seed=11):
             raise SystemExit(f"unknown {role} typeface {name!r}; "
                              f"choose from: {', '.join(sorted(TYPEFACES))}")
         ensure(name)
+    _SHOTS_DIR[0] = shots_dir
     os.makedirs(out_dir, exist_ok=True)
     strip = make_strip(p["size"], len(tiles), th, seed=seed)
 
