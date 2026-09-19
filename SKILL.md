@@ -32,6 +32,31 @@ If two different apps come out of this skill looking like siblings — same
 background treatment, same accent, same composition — it was used wrong. Never
 copy the theme from a previous project.
 
+## Default engine for app stores: poster tiles (`html_tiles.py`)
+
+For **every app-store set** - Android phone, Android tablet, iPhone 6.9″/6.5″,
+iPad 13″, macOS, plus the intro tile and the Play feature graphic - the default is
+**`scripts/html_tiles.py`**: HTML/CSS tiles rendered by headless Chrome around
+real captures. It produces the finish users approve: bold brand field with faint
+subject doodles, huge weight-900 title with one highlighted word, a **straight**
+device with the real screen, **one** real UI card lifted out exactly where it
+lives, and 1–2 props that match that screen. Read
+**`references/html-tiles.md`** before starting - its section 0 lists the rules
+learned from real review rounds (data before capture, tablets landscape, correct
+device per store, measured crops, no circles, plain words, different doodles per
+tile, two devices for light/dark, **fonts chosen per app, never the same face by habit**, keep old variants). `build_tiles.py` remains
+available for the calmer layouts in `references/art-direction.md`.
+
+Minimum loop for a full listing:
+1. Fill the app with realistic data on each target simulator/emulator; clean
+   status bar; capture every feature screen + light/dark Home + one localized Home.
+2. Research 50-100+ listings; save sheets and the strongest references to
+   `docs/store-research/`; show them; ask what to borrow.
+3. Choose the title + handwriting fonts for this app (`--suggest-fonts`, the
+   app's own type), then write one config per platform (same tiles, that platform's captures);
+   `measure` each card, `check` props, `build`.
+4. Send 2 tiles for review before producing the rest; keep every version.
+
 ## Workflow
 
 Work through these in order. Do not skip to rendering.
@@ -408,6 +433,8 @@ let it come through from the capture rather than drawing over it.
 - `references/pitfalls.md` — failures this skill exists to prevent
 - `references/checklist.md` — pre-delivery verification
 - `references/composition-gallery.md` — board archetypes, fields, the variety rule
-- `scripts/build_tiles.py` — the compositor
+- `references/html-tiles.md` — **the poster-tile workflow and hard rules** (read first for any store set)
+- `scripts/html_tiles.py` — poster-tile engine: `build` / `measure` / `check` for every store size
+- `scripts/build_tiles.py` — the Pillow compositor (calmer archetypes)
 - `scripts/page_mockup.py` — whole-page website mockup (sliced columns on a backdrop)
 - `scripts/collage.py` — portfolio-style boards (11 archetypes, fields, chips, stats)
